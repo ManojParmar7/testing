@@ -1,0 +1,188 @@
+// /*eslint-disable*/
+// import logo from './logo.svg';
+// import './App.css';
+// import UserRoutes from './routes'
+// import { Provider } from 'react-redux'
+// import {store} from './store'
+// // import AddTodo from './components/AddUser';
+// // import Todo from './components/Todo';
+// import  Routes  from './routes/index';
+
+// function App() {
+//   return (
+
+//     <Provider store={store}>
+//     <>
+// <Routes></Routes>
+//     </>
+//       </Provider>
+//   );
+// }
+
+// export default App;
+import React, { useEffect, useState } from 'react';
+import { WiDaySunny, WiRain, WiSnow, WiCloudy, WiNightClear,WiWindBeaufort5, WiShowers,WiHumidity, WiCloud,WiThunderstorm } from 'react-icons/wi';
+import './App.css'
+import api from './helper/Api';
+import { IoLocationSharp  } from "react-icons/io5";
+
+import UrlList from './helper/UrlList'
+const WeatherComponent = () => {
+  const [weatherData, setWeatherData] = useState(null);
+  const [searchType, setSearchType] = useState(null); 
+  const [searchValue, setSearchValue] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null);
+  const apiKey = '56aea2b319a88ffd3d52f5ab55aa879e'; 
+  const fetchWeatherData = async () => {
+    try {
+      let apiUrl = '';
+      if (searchType === 'city') {
+        apiUrl = `${UrlList.City + searchValue}&appid=${apiKey}`;
+      } else {
+        apiUrl = `${UrlList.Zip + searchValue},in&appid=${apiKey}`;
+      }
+
+      const response = await api.get(apiUrl);
+      setWeatherData(response.data);
+      setErrorMessage()
+    } catch (error) {
+      setErrorMessage(error && error.response.data)
+
+    }
+  };
+
+  const handleSearchTypeChange = (event) => {
+    setSearchType(event.target.value);
+  };
+
+  const handleSearchValueChange = (event) => {
+    setSearchValue(event.target.value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    fetchWeatherData();
+  };
+
+  const getWeatherIcon = (code) => {
+    switch (code) {
+      case '01d':
+        return <WiDaySunny size={100} />;
+      case '01n':
+        return <WiNightClear size={100} />;
+      case '02d':
+      case '02n':
+        return <WiCloudy size={100} />;
+      case '03d':
+      case '03n':
+        return <WiCloud size={100} />;
+      case '04d':
+      case '04n':
+        return <WiCloudy size={100} />;
+      case '09d':
+      case '09n':
+        return <WiShowers size={100} />;
+      case '10d':
+      case '10n':
+        return <WiRain size={100} />;
+      case '11d':
+      case '11n':
+        return <WiThunderstorm size={100} />;
+      case '13d':
+      case '13n':
+        return <WiSnow size={100} />;
+      default:
+        return <WiDaySunny size={100} />;
+    }
+  };
+
+  return (
+
+    <>
+      <title>Weather App</title>
+      <div className="container">
+        <div className="weather__header">
+          <form className="weather__search" onSubmit={handleSubmit}>
+            <div className='inline'>
+              <select onChange={handleSearchTypeChange} className="weather__searchform"
+              >  <option>Please select...</option>
+                <option value="city">City</option>
+                <option value="Zip">Zip</option></select>
+
+              <input
+                type="text"
+                placeholder={searchType === "city" ? "Search for a city..." : searchType === null ? "Please select" : "Search for a Zip..."}
+                className="weather__searchform"
+                onChange={handleSearchValueChange}
+              />
+              <i className="fa-solid fa-magnifying-glass" />
+            </div>
+          </form>
+          <div className="weather__units">
+            <span className="weather_unit_celsius">°C</span>
+            <span className="weather_unit_farenheit">°F</span>
+          </div>
+        </div>
+        {errorMessage === null ?
+          <>
+            <div className="weather__body">
+              Please search for weather data
+            </div>
+          </>
+          :
+          errorMessage && errorMessage.cod === '404' ?
+            <>    <div className="weather__body">
+              {errorMessage && errorMessage.message}
+            </div>
+            </>
+            :
+            <>
+              <div className="weather__body">
+                <h1 className="weather__city" > <IoLocationSharp  />
+ {weatherData && weatherData.name}</h1>
+                <div className="weather__datetime">12,12,2023</div>
+                <div className="weather__forecast">{weatherData && weatherData.weather[0].description}</div>
+                <div className="weather__icon">{getWeatherIcon(weatherData && weatherData.weather[0].icon)}</div>
+                <p className="weather__temperature">Temp:{weatherData && weatherData.main.temp}°</p>
+                <div className="weather__minmax">
+                  <p>Min: {weatherData && weatherData.main.temp_min}°</p>
+                  <p>Max: {weatherData && weatherData.main.temp_max}°</p>
+                </div>
+              </div>
+              <div className="weather__info">
+                <div className="weather__card">
+                  <i className="fa-solid fa-temperature-full" />
+                  <div>
+                    <p>Real Feel</p>
+                    <p className="weather__realfeel">{weatherData && weatherData.main.feels_like}°</p>
+                  </div>
+                </div>
+                <div className="weather__card">
+                <WiHumidity size={45}/>
+                  <div>
+                    <p>  Humidity</p>
+                    <p className="weather__humidity">{weatherData && weatherData.main.humidity}°</p>
+                  </div>
+                </div>
+                <div className="weather__card">
+                <WiWindBeaufort5 size={45} />
+                  <div>
+                    <p>Wind</p>
+                    <p className="weather__wind">{weatherData && weatherData.main.humidity}</p>
+                  </div>
+                </div>
+                <div className="weather__card">
+                   <WiHumidity size={45} />
+                  <div>
+                    <p> Pressure</p>
+                    <p className="weather__pressure">{weatherData && weatherData.main.pressure}°</p>
+                  </div>
+                </div>
+              </div>
+            </>
+        }
+      </div>
+    </>
+  );
+};
+export default WeatherComponent;
